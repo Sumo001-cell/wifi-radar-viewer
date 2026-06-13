@@ -18,7 +18,10 @@ const state = {
   blips: [],
   score: 0,
   eventSource: null,
-  lastPayloadAt: 0
+  pollTimer: null,
+  bridgeBase: null,
+  lastPayloadAt: 0,
+  lastBridgeError: ""
 };
 
 function fitCanvas() {
@@ -178,25 +181,138 @@ function renderBridgePayload(payload) {
   sourceDetail.textContent = payload.error || payload.viewerMessage;
 }
 
-function connectBridge() {
+function normalizeBridgeBase(value) {
+  if (!value) return null;
+  return value.replace(/\/+$/, "");
+}
+
+function getBridgeCandidates() {
+  const params = new URLSearchParams(window.location.search);
+  const candidates = [
+    normalizeBridgeBase(params.get("bridge")),
+    "http://127.0.0.1:8791",
+    "http://localhost:8791"
+  ].filter(Boolean);
+
+  return [...new Set(candidates)];
+}
+
+function bridgeUrl(path) {
+  return `${state.bridgeBase}${path}`;
+}
+
+function requestJson(url) {
+  if (typeof fetch === "function") {
+    return fetch(url, { cache: "no-store" }).then((response) => {
+      if (!response.ok) throw new Error(`Bridge HTTP ${response.status}`);
+      return response.json();
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open("GET", url, true);
+    request.timeout = 3500;
+    request.onload = () => {
+      if (request.status < 200 || request.status >= 300) {
+        reject(new Error(`Bridge HTTP ${request.status}`));
+        return;
+      }
+      try {
+        resolve(JSON.parse(request.responseText));
+      } catch (error) {
+        reject(error);
+      }
+    };
+    request.onerror = () => reject(new Error("Bridge network blocked"));
+    request.ontimeout = () => reject(new Error("Bridge timeout"));
+    request.send();
+  });
+}
+
+function payloadFromStatus(status) {
+  if (status?.lastPayload) return status.lastPayload;
+  return {
+    source: "none",
+    hasRealData: false,
+    router: status?.router || null,
+    measurement: null,
+    error: status?.router?.detail || "Bridge chạy nhưng chưa gửi payload đo.",
+    viewerMessage: "Bridge đang chạy nhưng chưa có nguồn đo radar thật."
+  };
+}
+
+function showBridgeUnavailable(message) {
+  bridgeState.textContent = "Không nối được bridge";
+  bridgeVerdict.textContent = "Chưa có dữ liệu đo thật";
+  radarTitle.textContent = "Bridge local chưa kết nối";
+  modeChip.textContent = "No bridge";
+  scoreEl.textContent = "0";
+  sourceTitle.textContent = "Viewer đang chờ tool đo";
+  sourceStrong.textContent = "GitHub link chỉ là màn hình xem.";
+  sourceDetail.textContent = message;
+}
+
+function startPolling() {
+  if (state.pollTimer) clearInterval(state.pollTimer);
+  state.pollTimer = setInterval(async () => {
+    try {
+      const status = await requestJson(bridgeUrl("/api/status"));
+      renderBridgePayload(payloadFromStatus(status));
+    } catch (error) {
+      state.lastBridgeError = error.message;
+      if (Date.now() - state.lastPayloadAt > 5000) {
+        showBridgeUnavailable(`Không đọc được ${state.bridgeBase}. ${error.message}`);
+      }
+    }
+  }, 1200);
+}
+
+function startEventStream() {
   if (state.eventSource) state.eventSource.close();
+  if (typeof EventSource !== "function") {
+    startPolling();
+    return;
+  }
+
+  try {
+    state.eventSource = new EventSource(bridgeUrl("/api/events"));
+    state.eventSource.onmessage = (event) => {
+      renderBridgePayload(JSON.parse(event.data));
+    };
+    state.eventSource.onerror = () => {
+      startPolling();
+    };
+  } catch {
+    startPolling();
+  }
+}
+
+async function connectBridge() {
+  if (state.eventSource) state.eventSource.close();
+  if (state.pollTimer) clearInterval(state.pollTimer);
+  state.eventSource = null;
+  state.pollTimer = null;
+  state.lastPayloadAt = 0;
   bridgeState.textContent = "Đang kết nối bridge";
   bridgeVerdict.textContent = "Chờ dữ liệu từ local tool";
-  state.eventSource = new EventSource("http://127.0.0.1:8791/api/events");
-  state.eventSource.onmessage = (event) => {
-    renderBridgePayload(JSON.parse(event.data));
-  };
-  state.eventSource.onerror = () => {
-    if (Date.now() - state.lastPayloadAt > 4000) {
-      bridgeState.textContent = "Bridge chưa chạy";
-      bridgeVerdict.textContent = "Chưa có dữ liệu đo thật";
-      radarTitle.textContent = "Hãy chạy WiFi Radar Bridge";
-      modeChip.textContent = "No bridge";
-      sourceTitle.textContent = "Chưa kết nối bridge";
-      sourceStrong.textContent = "Viewer chỉ là màn hình xem.";
-      sourceDetail.textContent = "Cần chạy tool WiFi Radar Bridge để lấy dữ liệu từ modem/CSI/local sensor.";
+
+  const errors = [];
+  for (const candidate of getBridgeCandidates()) {
+    state.bridgeBase = candidate;
+    try {
+      const status = await requestJson(bridgeUrl("/api/status"));
+      renderBridgePayload(payloadFromStatus(status));
+      startEventStream();
+      return;
+    } catch (error) {
+      errors.push(`${candidate}: ${error.message}`);
     }
-  };
+  }
+
+  showBridgeUnavailable(
+    `Tool WiFi Radar Bridge chưa truy cập được từ trang này. Đã thử: ${errors.join(" | ")}`
+  );
 }
 
 connectButton.addEventListener("click", connectBridge);
