@@ -10,6 +10,7 @@ const bridgeVerdict = document.querySelector("#bridgeVerdict");
 const sourceTitle = document.querySelector("#sourceTitle");
 const sourceStrong = document.querySelector("#sourceStrong");
 const sourceDetail = document.querySelector("#sourceDetail");
+const openBridgeLink = document.querySelector("#openBridgeLink");
 
 const state = {
   running: false,
@@ -189,12 +190,18 @@ function normalizeBridgeBase(value) {
 function getBridgeCandidates() {
   const params = new URLSearchParams(window.location.search);
   const candidates = [
+    window.location.hostname === "sumo001-cell.github.io" ? null : window.location.origin,
     normalizeBridgeBase(params.get("bridge")),
     "http://127.0.0.1:8791",
     "http://localhost:8791"
   ].filter(Boolean);
 
   return [...new Set(candidates)];
+}
+
+function setOpenBridgeLink(base) {
+  if (!openBridgeLink || !base) return;
+  openBridgeLink.href = `${base}/viewer`;
 }
 
 function bridgeUrl(path) {
@@ -298,8 +305,11 @@ async function connectBridge() {
   bridgeVerdict.textContent = "Chờ dữ liệu từ local tool";
 
   const errors = [];
-  for (const candidate of getBridgeCandidates()) {
+  const candidates = getBridgeCandidates();
+  setOpenBridgeLink(candidates[0]);
+  for (const candidate of candidates) {
     state.bridgeBase = candidate;
+    setOpenBridgeLink(candidate);
     try {
       const status = await requestJson(bridgeUrl("/api/status"));
       renderBridgePayload(payloadFromStatus(status));
