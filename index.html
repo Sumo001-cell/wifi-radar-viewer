@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#06130f" />
+    <title>WiFi Radar Viewer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <div class="brand">
+          <span class="mark" aria-hidden="true"></span>
+          <div>
+            <p>GitHub hosted viewer</p>
+            <h1>WiFi Radar</h1>
+          </div>
+        </div>
+        <div class="verdict" id="verdict">
+          <span>Kiểm tra kiến trúc</span>
+          <strong>Modem cần xuất dữ liệu sensing</strong>
+        </div>
+      </header>
+
+      <section class="grid">
+        <article class="radar-card">
+          <div class="head">
+            <div>
+              <p>Radar screen</p>
+              <h2 id="radarTitle">Viewer đang chạy</h2>
+            </div>
+            <span class="chip" id="modeChip">Viewer</span>
+          </div>
+
+          <div class="radar">
+            <canvas id="radarCanvas" width="900" height="900"></canvas>
+            <div class="score">
+              <span id="score">0</span>
+              <small>motion</small>
+            </div>
+          </div>
+        </article>
+
+        <aside class="side">
+          <section class="panel">
+            <p>Yêu cầu của anh</p>
+            <h3>Modem đo, laptop và điện thoại chỉ xem</h3>
+            <div class="truth">
+              <strong>Đúng kiến trúc.</strong>
+              <span>Nhưng modem phải có firmware/API WiFi sensing hoặc CSI để xuất dữ liệu đo. Nếu không, GitHub page không thể tự lấy sóng WiFi thô.</span>
+            </div>
+          </section>
+
+          <section class="panel">
+            <p>Browser limit</p>
+            <h3>GitHub link không được quyền đọc radio WiFi</h3>
+            <ul class="checks">
+              <li><strong>Không đọc được CSI</strong><span>Browser không có API đọc Channel State Information.</span></li>
+              <li><strong>Không đọc được modem radar</strong><span>Trừ khi modem tự cung cấp endpoint sensing an toàn.</span></li>
+              <li><strong>Có thể làm viewer</strong><span>Khi có nguồn dữ liệu thật từ modem/CSI/local bridge.</span></li>
+            </ul>
+          </section>
+
+          <section class="panel">
+            <p>Practical route</p>
+            <h3>Đường hoàn thiện thật</h3>
+            <ol class="steps">
+              <li>Modem hỗ trợ WiFi sensing/CSI hoặc OpenWrt/firmware tương thích.</li>
+              <li>Modem/bridge gửi dữ liệu motion/CSI ra một endpoint.</li>
+              <li>Link này hiển thị radar trên laptop và điện thoại.</li>
+            </ol>
+          </section>
+        </aside>
+      </section>
+
+      <section class="lower">
+        <button id="demoButton">Chạy demo sóng WiFi</button>
+        <button id="pauseButton">Tạm dừng</button>
+      </section>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+</html>
