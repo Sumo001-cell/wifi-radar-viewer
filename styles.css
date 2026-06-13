@@ -206,6 +206,38 @@ h3 {
   font-weight: 800;
 }
 
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.metric-grid div {
+  min-height: 74px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.metric-grid span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.metric-grid strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--text);
+  font-size: clamp(0.95rem, 1.7vw, 1.22rem);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
 .side {
   display: grid;
   gap: 16px;
@@ -317,6 +349,10 @@ h3 {
 }
 
 @media (max-width: 520px) {
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+
   .lower {
     grid-template-columns: 1fr;
   }

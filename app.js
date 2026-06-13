@@ -11,6 +11,19 @@ const sourceTitle = document.querySelector("#sourceTitle");
 const sourceStrong = document.querySelector("#sourceStrong");
 const sourceDetail = document.querySelector("#sourceDetail");
 const openBridgeLink = document.querySelector("#openBridgeLink");
+const metricSource = document.querySelector("#metricSource");
+const metricScore = document.querySelector("#metricScore");
+const metricLatency = document.querySelector("#metricLatency");
+const metricLoss = document.querySelector("#metricLoss");
+const metricDistance = document.querySelector("#metricDistance");
+const metricDots = document.querySelector("#metricDots");
+const meaningTitle = document.querySelector("#meaningTitle");
+const meaningOne = document.querySelector("#meaningOne");
+const meaningOneDetail = document.querySelector("#meaningOneDetail");
+const meaningTwo = document.querySelector("#meaningTwo");
+const meaningTwoDetail = document.querySelector("#meaningTwoDetail");
+const meaningThree = document.querySelector("#meaningThree");
+const meaningThreeDetail = document.querySelector("#meaningThreeDetail");
 
 const state = {
   running: false,
@@ -153,6 +166,54 @@ function addMeasurementBlip(measurement) {
   state.blips = state.blips.slice(-40);
 }
 
+function valueOrDash(value, suffix = "") {
+  return Number.isFinite(Number(value)) ? `${value}${suffix}` : "--";
+}
+
+function renderMetrics(measurement, mode) {
+  const score = Number(measurement?.motionScore) || 0;
+  metricSource.textContent = mode === "csi"
+    ? "CSI vector"
+    : mode === "wifi-link"
+      ? "WiFi link tới modem"
+      : measurement?.source || "Bridge";
+  metricScore.textContent = `${score} / 100`;
+  metricLatency.textContent = valueOrDash(measurement?.averageMs, " ms");
+  metricLoss.textContent = valueOrDash(measurement?.packetLossPercent, "%");
+
+  if (mode === "csi") {
+    metricDistance.textContent = "Cần hiệu chuẩn";
+    metricDots.textContent = "Biến động CSI";
+    meaningTitle.textContent = "CSI cho biết biến động kênh sóng";
+    meaningOne.textContent = "Motion score";
+    meaningOneDetail.textContent = "Điểm càng cao nghĩa là CSI đổi mạnh hơn so với nền đã học.";
+    meaningTwo.textContent = "Chấm radar";
+    meaningTwoDetail.textContent = "Chấm là marker biến động CSI, chưa phải tọa độ nếu chưa hiệu chuẩn vị trí.";
+    meaningThree.textContent = "Khoảng cách";
+    meaningThreeDetail.textContent = "Có thể hiệu chuẩn sau bằng CSI/RTT/multiple antenna; hiện chưa có mét chính xác.";
+    return;
+  }
+
+  metricDistance.textContent = "Không có từ ping";
+  metricDots.textContent = "Biến động link";
+  meaningTitle.textContent = "WiFi wave/link không phải tọa độ";
+  meaningOne.textContent = "Motion score";
+  meaningOneDetail.textContent = "Số 2, 12, 40 là mức biến động độ trễ/mất gói so với nền, không phải mét.";
+  meaningTwo.textContent = "Chấm radar";
+  meaningTwoDetail.textContent = "Mỗi chấm là một lần tín hiệu đổi; vị trí chấm chỉ để nhìn nhịp thay đổi.";
+  meaningThree.textContent = "Khoảng cách";
+  meaningThreeDetail.textContent = "Nguồn WiFi link hiện tại chưa có dữ liệu thời gian bay/pha nên chưa tính được khoảng cách.";
+}
+
+function resetMetrics() {
+  metricSource.textContent = "Chưa có";
+  metricScore.textContent = "0 / 100";
+  metricLatency.textContent = "--";
+  metricLoss.textContent = "--";
+  metricDistance.textContent = "Chưa có";
+  metricDots.textContent = "Biến động tín hiệu";
+}
+
 function renderBridgePayload(payload) {
   state.lastPayloadAt = Date.now();
   state.testMode = false;
@@ -187,6 +248,7 @@ function renderBridgePayload(payload) {
       ? `Modem ${payload.measurement.vendor || ""} ${payload.measurement.gateway || ""}`.trim()
       : payload.measurement.source;
     sourceDetail.textContent = payload.measurement.detail || payload.viewerMessage;
+    renderMetrics(payload.measurement, isCsi ? "csi" : isWifiLink ? "wifi-link" : "other");
     addMeasurementBlip(payload.measurement);
     return;
   }

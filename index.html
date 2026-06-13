@@ -40,6 +40,33 @@
               <small>motion</small>
             </div>
           </div>
+
+          <div class="metric-grid" aria-label="measurement explanation">
+            <div>
+              <span>Nguồn đo</span>
+              <strong id="metricSource">Chưa có</strong>
+            </div>
+            <div>
+              <span>Điểm biến động</span>
+              <strong id="metricScore">0 / 100</strong>
+            </div>
+            <div>
+              <span>Độ trễ tới modem</span>
+              <strong id="metricLatency">--</strong>
+            </div>
+            <div>
+              <span>Mất gói</span>
+              <strong id="metricLoss">--</strong>
+            </div>
+            <div>
+              <span>Khoảng cách</span>
+              <strong id="metricDistance">Chưa có</strong>
+            </div>
+            <div>
+              <span>Ý nghĩa chấm</span>
+              <strong id="metricDots">Biến động tín hiệu</strong>
+            </div>
+          </div>
         </article>
 
         <aside class="side">
@@ -53,12 +80,12 @@
           </section>
 
           <section class="panel">
-            <p>Browser limit</p>
-            <h3>GitHub link không được quyền đọc radio WiFi</h3>
+            <p>Data meaning</p>
+            <h3 id="meaningTitle">Các chấm không phải tọa độ người</h3>
             <ul class="checks">
-              <li><strong>Không đọc được CSI</strong><span>Browser không có API đọc Channel State Information.</span></li>
-              <li><strong>Không đọc được modem radar</strong><span>Trừ khi modem tự cung cấp endpoint sensing an toàn.</span></li>
-              <li><strong>Có thể làm viewer</strong><span>Khi có nguồn dữ liệu thật từ modem/CSI/local bridge.</span></li>
+              <li><strong id="meaningOne">Motion score</strong><span id="meaningOneDetail">Số 2, 12, 40 là mức biến động tín hiệu so với nền, không phải mét.</span></li>
+              <li><strong id="meaningTwo">Chấm radar</strong><span id="meaningTwoDetail">Mỗi chấm là một lần tín hiệu đổi mạnh; vị trí chấm chỉ để nhìn nhịp thay đổi.</span></li>
+              <li><strong id="meaningThree">Khoảng cách</strong><span id="meaningThreeDetail">Chỉ hiện được khi nguồn đo có CSI/RTT/pha hoặc dữ liệu khoảng cách đã hiệu chuẩn.</span></li>
             </ul>
           </section>
 
@@ -66,9 +93,9 @@
             <p>Practical route</p>
             <h3>Đường hoàn thiện thật</h3>
             <ol class="steps">
-              <li>Modem hỗ trợ WiFi sensing/CSI hoặc OpenWrt/firmware tương thích.</li>
-              <li>Modem/bridge gửi dữ liệu motion/CSI ra một endpoint.</li>
-              <li>Link này hiển thị radar trên laptop và điện thoại.</li>
+              <li>GitHub link là màn hình xem, không tự đọc được WiFi radio của máy.</li>
+              <li>Bridge local tự lấy modem của WiFi hiện tại và gửi dữ liệu cho viewer.</li>
+              <li>Muốn có khoảng cách thật cần CSI/RTT hoặc thiết bị đã hiệu chuẩn.</li>
             </ol>
           </section>
         </aside>
@@ -80,6 +107,6 @@
         <a id="openBridgeLink" class="bridge-link secondary" href="http://127.0.0.1:8791/viewer">Mở viewer bridge</a>
       </section>
     </main>
-    <script src="./app.js?v=csi-ingest-6"></script>
+    <script src="./app.js?v=meaning-metrics-7"></script>
   </body>
 </html>
