@@ -160,19 +160,28 @@ function renderBridgePayload(payload) {
 
   if (payload.hasRealData && payload.measurement) {
     const isWifiLink = payload.measurement.sourceRole === "wifi-link";
+    const isCsi = payload.measurement.sourceRole === "csi";
     bridgeVerdict.textContent = isWifiLink
       ? "Đang đo biến động sóng WiFi thật"
+      : isCsi
+        ? "Đang nhận CSI radar thật"
       : "Đang nhận dữ liệu đo thật";
     radarTitle.textContent = isWifiLink
       ? "Biến động tín hiệu WiFi đang chạy"
+      : isCsi
+        ? "CSI WiFi radar đang chạy"
       : "Đang hiển thị dữ liệu radar";
     modeChip.textContent = isWifiLink
       ? "WiFi wave"
+      : isCsi
+        ? "CSI radar"
       : payload.measurement.sourceRole === "modem"
         ? "Modem data"
         : "Bridge data";
     sourceTitle.textContent = isWifiLink
       ? "Nguồn đo WiFi link đang hoạt động"
+      : isCsi
+        ? "Nguồn đo CSI đang hoạt động"
       : "Nguồn đo đang hoạt động";
     sourceStrong.textContent = isWifiLink
       ? `Modem ${payload.measurement.vendor || ""} ${payload.measurement.gateway || ""}`.trim()
