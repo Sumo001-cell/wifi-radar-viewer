@@ -159,13 +159,24 @@ function renderBridgePayload(payload) {
   bridgeState.textContent = "Bridge đã kết nối";
 
   if (payload.hasRealData && payload.measurement) {
-    bridgeVerdict.textContent = "Đang nhận dữ liệu đo thật";
-    radarTitle.textContent = "Đang hiển thị dữ liệu radar";
-    modeChip.textContent = payload.measurement.sourceRole === "modem"
-      ? "Modem data"
-      : "Bridge data";
-    sourceTitle.textContent = "Nguồn đo đang hoạt động";
-    sourceStrong.textContent = payload.measurement.source;
+    const isWifiLink = payload.measurement.sourceRole === "wifi-link";
+    bridgeVerdict.textContent = isWifiLink
+      ? "Đang đo biến động sóng WiFi thật"
+      : "Đang nhận dữ liệu đo thật";
+    radarTitle.textContent = isWifiLink
+      ? "Biến động tín hiệu WiFi đang chạy"
+      : "Đang hiển thị dữ liệu radar";
+    modeChip.textContent = isWifiLink
+      ? "WiFi wave"
+      : payload.measurement.sourceRole === "modem"
+        ? "Modem data"
+        : "Bridge data";
+    sourceTitle.textContent = isWifiLink
+      ? "Nguồn đo WiFi link đang hoạt động"
+      : "Nguồn đo đang hoạt động";
+    sourceStrong.textContent = isWifiLink
+      ? `Modem ${payload.measurement.vendor || ""} ${payload.measurement.gateway || ""}`.trim()
+      : payload.measurement.source;
     sourceDetail.textContent = payload.measurement.detail || payload.viewerMessage;
     addMeasurementBlip(payload.measurement);
     return;
