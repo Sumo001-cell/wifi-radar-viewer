@@ -3,14 +3,22 @@ const ctx = canvas.getContext("2d");
 const scoreEl = document.querySelector("#score");
 const radarTitle = document.querySelector("#radarTitle");
 const modeChip = document.querySelector("#modeChip");
-const demoButton = document.querySelector("#demoButton");
-const pauseButton = document.querySelector("#pauseButton");
+const connectButton = document.querySelector("#connectButton");
+const testButton = document.querySelector("#testButton");
+const bridgeState = document.querySelector("#bridgeState");
+const bridgeVerdict = document.querySelector("#bridgeVerdict");
+const sourceTitle = document.querySelector("#sourceTitle");
+const sourceStrong = document.querySelector("#sourceStrong");
+const sourceDetail = document.querySelector("#sourceDetail");
 
 const state = {
-  running: true,
+  running: false,
+  testMode: false,
   sweep: 0,
   blips: [],
-  score: 0
+  score: 0,
+  eventSource: null,
+  lastPayloadAt: 0
 };
 
 function fitCanvas() {
@@ -36,14 +44,14 @@ function point(centerX, centerY, radius, angle, ratio) {
   };
 }
 
-function addDemoBlips() {
-  if (!state.running) return;
+function addTestBlips() {
+  if (!state.testMode) return;
   const now = performance.now();
   const wave = Math.sin(now / 900) * 0.5 + 0.5;
   state.score = Math.round(20 + wave * 72);
   scoreEl.textContent = state.score;
-  radarTitle.textContent = "Demo sóng WiFi đang chạy";
-  modeChip.textContent = "Demo viewer";
+  radarTitle.textContent = "Test màn hình radar";
+  modeChip.textContent = "Screen test";
 
   if (Math.random() > 0.82) {
     state.blips.push({
@@ -64,7 +72,7 @@ function draw() {
   const radius = Math.min(width, height) * 0.46;
   const now = performance.now();
 
-  addDemoBlips();
+  addTestBlips();
   ctx.clearRect(0, 0, width, height);
 
   const glow = ctx.createRadialGradient(centerX, centerY, radius * 0.05, centerX, centerY, radius);
@@ -121,18 +129,83 @@ function draw() {
   ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
   ctx.stroke();
 
-  if (state.running) state.sweep = (state.sweep + 1.2) % 360;
+  state.sweep = (state.sweep + 1.2) % 360;
   requestAnimationFrame(draw);
 }
 
-demoButton.addEventListener("click", () => {
-  state.running = true;
-});
+function addMeasurementBlip(measurement) {
+  if (!measurement) return;
+  const now = performance.now();
+  const score = Number(measurement.motionScore) || 0;
+  state.score = score;
+  scoreEl.textContent = score;
+  state.blips.push({
+    createdAt: now,
+    angle: (now / 16 + score * 3) % 360,
+    distance: 0.18 + Math.min(0.76, score / 120),
+    radius: score > 70 ? 18 : 10,
+    color: score > 70 ? "#ffcd5b" : "#65d8ff"
+  });
+  state.blips = state.blips.slice(-40);
+}
 
-pauseButton.addEventListener("click", () => {
-  state.running = false;
-  radarTitle.textContent = "Viewer tạm dừng";
-  modeChip.textContent = "Paused";
+function renderBridgePayload(payload) {
+  state.lastPayloadAt = Date.now();
+  state.testMode = false;
+  bridgeState.textContent = "Bridge đã kết nối";
+
+  if (payload.hasRealData && payload.measurement) {
+    bridgeVerdict.textContent = "Đang nhận dữ liệu đo thật";
+    radarTitle.textContent = "Đang hiển thị dữ liệu radar";
+    modeChip.textContent = payload.measurement.sourceRole === "modem"
+      ? "Modem data"
+      : "Bridge data";
+    sourceTitle.textContent = "Nguồn đo đang hoạt động";
+    sourceStrong.textContent = payload.measurement.source;
+    sourceDetail.textContent = payload.measurement.detail || payload.viewerMessage;
+    addMeasurementBlip(payload.measurement);
+    return;
+  }
+
+  bridgeVerdict.textContent = "Bridge chạy nhưng thiếu dữ liệu đo";
+  radarTitle.textContent = "Chưa có dữ liệu radar thật";
+  modeChip.textContent = payload.source || "No source";
+  scoreEl.textContent = "0";
+  sourceTitle.textContent = "Modem chưa gửi dữ liệu đo";
+  sourceStrong.textContent = payload.router?.gateway
+    ? `Modem ${payload.router.vendor || ""} ${payload.router.gateway}`.trim()
+    : "Chưa thấy modem";
+  sourceDetail.textContent = payload.error || payload.viewerMessage;
+}
+
+function connectBridge() {
+  if (state.eventSource) state.eventSource.close();
+  bridgeState.textContent = "Đang kết nối bridge";
+  bridgeVerdict.textContent = "Chờ dữ liệu từ local tool";
+  state.eventSource = new EventSource("http://127.0.0.1:8791/api/events");
+  state.eventSource.onmessage = (event) => {
+    renderBridgePayload(JSON.parse(event.data));
+  };
+  state.eventSource.onerror = () => {
+    if (Date.now() - state.lastPayloadAt > 4000) {
+      bridgeState.textContent = "Bridge chưa chạy";
+      bridgeVerdict.textContent = "Chưa có dữ liệu đo thật";
+      radarTitle.textContent = "Hãy chạy WiFi Radar Bridge";
+      modeChip.textContent = "No bridge";
+      sourceTitle.textContent = "Chưa kết nối bridge";
+      sourceStrong.textContent = "Viewer chỉ là màn hình xem.";
+      sourceDetail.textContent = "Cần chạy tool WiFi Radar Bridge để lấy dữ liệu từ modem/CSI/local sensor.";
+    }
+  };
+}
+
+connectButton.addEventListener("click", connectBridge);
+
+testButton.addEventListener("click", () => {
+  state.testMode = true;
+  bridgeState.textContent = "Đang test màn hình";
+  bridgeVerdict.textContent = "Không phải dữ liệu đo thật";
 });
 
 draw();
+connectBridge();

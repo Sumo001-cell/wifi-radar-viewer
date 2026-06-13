@@ -18,8 +18,8 @@
           </div>
         </div>
         <div class="verdict" id="verdict">
-          <span>Kiểm tra kiến trúc</span>
-          <strong>Modem cần xuất dữ liệu sensing</strong>
+          <span id="bridgeState">Đang tìm bridge</span>
+          <strong id="bridgeVerdict">Chưa có dữ liệu đo thật</strong>
         </div>
       </header>
 
@@ -28,7 +28,7 @@
           <div class="head">
             <div>
               <p>Radar screen</p>
-              <h2 id="radarTitle">Viewer đang chạy</h2>
+              <h2 id="radarTitle">Đang chờ dữ liệu đo</h2>
             </div>
             <span class="chip" id="modeChip">Viewer</span>
           </div>
@@ -44,11 +44,11 @@
 
         <aside class="side">
           <section class="panel">
-            <p>Yêu cầu của anh</p>
-            <h3>Modem đo, laptop và điện thoại chỉ xem</h3>
+            <p>Live bridge</p>
+            <h3 id="sourceTitle">Chưa kết nối bridge</h3>
             <div class="truth">
-              <strong>Đúng kiến trúc.</strong>
-              <span>Nhưng modem phải có firmware/API WiFi sensing hoặc CSI để xuất dữ liệu đo. Nếu không, GitHub page không thể tự lấy sóng WiFi thô.</span>
+              <strong id="sourceStrong">Viewer chỉ là màn hình xem.</strong>
+              <span id="sourceDetail">Hãy chạy WiFi Radar Bridge trên máy đang cùng mạng với modem để cấp dữ liệu đo thật.</span>
             </div>
           </section>
 
@@ -75,8 +75,8 @@
       </section>
 
       <section class="lower">
-        <button id="demoButton">Chạy demo sóng WiFi</button>
-        <button id="pauseButton">Tạm dừng</button>
+        <button id="connectButton">Kết nối bridge</button>
+        <button id="testButton">Test màn hình</button>
       </section>
     </main>
     <script src="./app.js"></script>
