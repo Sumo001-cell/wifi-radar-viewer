@@ -309,9 +309,9 @@ async function connectBridge() {
   setOpenBridgeLink(candidates[0]);
   for (const candidate of candidates) {
     state.bridgeBase = candidate;
-    setOpenBridgeLink(candidate);
     try {
       const status = await requestJson(bridgeUrl("/api/status"));
+      setOpenBridgeLink(candidate);
       renderBridgePayload(payloadFromStatus(status));
       startEventStream();
       return;
