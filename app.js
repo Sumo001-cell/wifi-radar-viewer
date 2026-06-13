@@ -172,6 +172,7 @@ function valueOrDash(value, suffix = "") {
 
 function renderMetrics(measurement, mode) {
   const score = Number(measurement?.motionScore) || 0;
+  const distance = Number(measurement?.distanceMeters);
   metricSource.textContent = mode === "csi"
     ? "CSI vector"
     : mode === "wifi-link"
@@ -180,6 +181,19 @@ function renderMetrics(measurement, mode) {
   metricScore.textContent = `${score} / 100`;
   metricLatency.textContent = valueOrDash(measurement?.averageMs, " ms");
   metricLoss.textContent = valueOrDash(measurement?.packetLossPercent, "%");
+
+  if (Number.isFinite(distance)) {
+    metricDistance.textContent = `${distance} m`;
+    metricDots.textContent = measurement?.distanceMethod || "distance";
+    meaningTitle.textContent = "Đang có dữ liệu khoảng cách";
+    meaningOne.textContent = "Khoảng cách";
+    meaningOneDetail.textContent = `Khoảng cách đang lấy từ ${measurement?.distanceMethod || "nguồn đo ngoài"}, không phải từ chấm vẽ ngẫu nhiên.`;
+    meaningTwo.textContent = "Motion score";
+    meaningTwoDetail.textContent = "Motion score vẫn là mức biến động tín hiệu; khoảng cách xem ở ô Khoảng cách.";
+    meaningThree.textContent = "Chấm radar";
+    meaningThreeDetail.textContent = "Chấm chỉ đánh dấu nhịp đo; vị trí chính xác cần thêm góc/đa điểm đo để trilateration.";
+    return;
+  }
 
   if (mode === "csi") {
     metricDistance.textContent = "Cần hiệu chuẩn";
