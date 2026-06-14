@@ -167,12 +167,19 @@ function addMeasurementBlip(measurement) {
 }
 
 function valueOrDash(value, suffix = "") {
+  if (value === null || value === undefined || value === "") return "--";
   return Number.isFinite(Number(value)) ? `${value}${suffix}` : "--";
+}
+
+function optionalNumber(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
 }
 
 function renderMetrics(measurement, mode) {
   const score = Number(measurement?.motionScore) || 0;
-  const distance = Number(measurement?.distanceMeters);
+  const distance = optionalNumber(measurement?.distanceMeters);
   metricSource.textContent = mode === "csi"
     ? "CSI vector"
     : mode === "wifi-link"
@@ -182,7 +189,7 @@ function renderMetrics(measurement, mode) {
   metricLatency.textContent = valueOrDash(measurement?.averageMs, " ms");
   metricLoss.textContent = valueOrDash(measurement?.packetLossPercent, "%");
 
-  if (Number.isFinite(distance)) {
+  if (distance !== null) {
     metricDistance.textContent = `${distance} m`;
     metricDots.textContent = measurement?.distanceMethod || "distance";
     meaningTitle.textContent = "Đang có dữ liệu khoảng cách";
