@@ -11,6 +11,7 @@ const sourceTitle = document.querySelector("#sourceTitle");
 const sourceStrong = document.querySelector("#sourceStrong");
 const sourceDetail = document.querySelector("#sourceDetail");
 const openBridgeLink = document.querySelector("#openBridgeLink");
+const androidRttLink = document.querySelector("#androidRttLink");
 const metricSource = document.querySelector("#metricSource");
 const metricScore = document.querySelector("#metricScore");
 const metricLatency = document.querySelector("#metricLatency");
@@ -305,6 +306,14 @@ function getBridgeCandidates() {
 function setOpenBridgeLink(base) {
   if (!openBridgeLink || !base) return;
   openBridgeLink.href = `${base}/viewer`;
+  setAndroidRttLink(base);
+}
+
+function setAndroidRttLink(base) {
+  if (!androidRttLink) return;
+  const fallback = encodeURIComponent("https://github.com/Sumo001-cell/wifi-rtt-radar-sender/releases/download/latest/wifi-rtt-radar-debug.apk");
+  const bridge = base ? `?bridge=${encodeURIComponent(base)}` : "";
+  androidRttLink.href = `intent://open${bridge}#Intent;scheme=wifiradar;package=com.hermes.wifirttsender;S.browser_fallback_url=${fallback};end`;
 }
 
 function bridgeUrl(path) {
